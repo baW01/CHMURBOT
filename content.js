@@ -1,11 +1,12 @@
 // content.js
 
+// (Funkcje normalizeText, levenshteinDistance, calculateSimilarity pozostają bez zmian z poprzedniej wersji)
 function normalizeText(text) {
   if (!text) return '';
   return text
     .toLowerCase()
-    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "") // Remove punctuation
-    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -22,9 +23,9 @@ function levenshteinDistance(s1, s2) {
     for (let i = 1; i <= s1.length; i += 1) {
       const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
       track[j][i] = Math.min(
-        track[j][i - 1] + 1, // deletion
-        track[j - 1][i] + 1, // insertion
-        track[j - 1][i - 1] + indicator, // substitution
+        track[j][i - 1] + 1,
+        track[j - 1][i] + 1,
+        track[j - 1][i - 1] + indicator,
       );
     }
   }
@@ -40,57 +41,163 @@ function calculateSimilarity(s1, s2) {
   return (longer.length - levenshteinDistance(longer, shorter)) / parseFloat(longer.length);
 }
 
-function markCorrectAnswers() {
+
+async function getApiKey() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['openaiApiKey'], (result) => {
+      resolve(result.openaiApiKey);
+    });
+  });
+}
+
+async function callChatGPT(questionText, optionsArray, questionType, apiKey) {
+  console.log("Form Helper: Calling ChatGPT API for question:", questionText.substring(0, 50) + "...");
+  const modelToUse = "gpt-4.1-nano"; // Możesz zmienić na nowszy model np. gpt-4o, gpt-4-turbo
+
+  let optionsString = "";
+  optionsArray.forEach(opt => {
+    optionsString += `${opt.letter}: ${opt.text}\n`;
+  });
+
+  // --- Ulepszony Prompt ---
+  const system_prompt_content = `Jesteś wysoce precyzyjnym asystentem AI specjalizującym się w odpowiadaniu na pytania testowe z wielokrotnym lub jednokrotnym wyborem.
+Twoim zadaniem jest zidentyfikowanie poprawnej litery (lub liter) odpowiedzi z podanej listy opcji.
+Zawsze odpowiadaj TYLKO używając liter opcji (np. A, B, C, D).
+Nie dodawaj żadnych innych słów, wyjaśnień, zdań wprowadzających, numeracji, punktorów ani znaków interpunkcyjnych poza wymaganymi literami i, w przypadku wielu odpowiedzi, przecinkami oddzielającymi litery.
+Twoja odpowiedź MUSI być wyłącznie ciągiem liter reprezentujących wybrane opcje.
+
+Przykłady oczekiwanego formatu odpowiedzi:
+- Jeśli poprawna jest opcja A: A
+- Jeśli poprawne są opcje B i D: B,D (bez spacji po przecinku)
+- Jeśli poprawna jest opcja C: C`;
+
+  let user_prompt_instruction = "";
+  if (questionType === 'single') {
+    user_prompt_instruction = `To jest pytanie JEDNOKROTNEGO WYBORU. Przeanalizuj poniższe pytanie i podane opcje.
+Zidentyfikuj JEDNĄ poprawną opcję i zwróć TYLKO literę tej opcji. Na przykład, jeśli opcja B jest poprawna, Twoja odpowiedź musi brzmieć DOKŁADNIE: B`;
+  } else if (questionType === 'multiple') {
+    user_prompt_instruction = `To jest pytanie WIELOKROTNEGO WYBORU. Przeanalizuj poniższe pytanie i podane opcje.
+Może być więcej niż jedna poprawna odpowiedź. Zidentyfikuj WSZYSTKIE poprawne opcje.
+Zwróć TYLKO litery tych opcji, oddzielone przecinkami, BEZ SPACJI PO PRZECINKU. Na przykład, jeśli opcje A i C są poprawne, Twoja odpowiedź musi brzmieć DOKŁADNIE: A,C`;
+  } else { // Fallback, chociaż typ pytania powinien być już znany
+    user_prompt_instruction = `Przeanalizuj poniższe pytanie i podane opcje.
+Zwróć TYLKO literę lub litery poprawnych odpowiedzi. Jeśli jest jedna poprawna odpowiedź, zwróć tylko jej literę (np. B). Jeśli jest więcej niż jedna, zwróć litery oddzielone przecinkami, bez spacji po przecinku (np. A,C).`;
+  }
+
+  const user_prompt_content = `${user_prompt_instruction}
+
+---
+PYTANIE:
+${questionText}
+
+OPCJE:
+${optionsString}
+---
+
+Twoja odpowiedź (TYLKO litera/litery, np. B lub A,C):`;
+  // --- Koniec ulepszonego Promptu ---
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: modelToUse,
+        messages: [
+          { role: "system", content: system_prompt_content },
+          { role: "user", content: user_prompt_content }
+        ],
+        temperature: 0.1, // Bardzo niska temperatura dla bardziej przewidywalnych i precyzyjnych odpowiedzi
+        top_p: 0.1, // Również dla większej precyzji
+        max_tokens: 15 // Oczekujemy tylko kilku liter i przecinków
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Form Helper: ChatGPT API Error:", response.status, errorData);
+      if (response.status === 401) alert("Błąd API OpenAI: Nieautoryzowany. Sprawdź swój klucz API w opcjach rozszerzenia.");
+      else if (response.status === 429) alert("Błąd API OpenAI: Przekroczono limit zapytań (Rate Limit). Spróbuj później lub sprawdź swoje limity w panelu OpenAI.");
+      else alert(`Błąd API OpenAI: ${errorData.error?.message || response.statusText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
+      // Bardziej rygorystyczne czyszczenie odpowiedzi - usuwamy wszystko oprócz liter A-Z i przecinków
+      const rawAnswer = data.choices[0].message.content.trim().toUpperCase();
+      const answerLetters = rawAnswer.replace(/[^A-Z,]/g, ''); 
+      
+      console.log("Form Helper: ChatGPT raw response:", rawAnswer);
+      console.log("Form Helper: ChatGPT cleaned response (letters):", answerLetters);
+      
+      // Dalsza walidacja, aby upewnić się, że format to np. A lub A,B,C
+      if (/^[A-Z](,[A-Z])*$/.test(answerLetters) || /^[A-Z]$/.test(answerLetters)) {
+         return answerLetters.split(',').map(l => l.trim()).filter(l => l.length === 1 && l >= 'A' && l <= 'Z');
+      } else {
+        console.warn("Form Helper: ChatGPT response format after cleaning is still unexpected:", answerLetters);
+        // Można spróbować dodatkowego parsowania lub zignorować, jeśli format jest zły
+        // Na przykład, jeśli jest "ODPOWIEDŹ: A", to po replace(/[^A-Z,]/g, '') zostanie "ODPOWIEDAZ" co jest niepoprawne
+        // W tym przypadku, jeśli pierwsze czyszczenie nie dało dobrego wyniku, można spróbować bardziej agresywnych metod
+        // lub po prostu odrzucić odpowiedź.
+        // Dla uproszczenia, jeśli format jest zły po pierwszym czyszczeniu, zwracamy null.
+        // Można by tu dodać logikę próbującą wyciągnąć pojedyncze litery z dłuższego tekstu, ale to zwiększa ryzyko błędu.
+        const singleLetterMatch = rawAnswer.match(/[A-Z](?![A-Z])(?![a-z])/g); // Próba znalezienia pojedynczych wielkich liter
+        if(singleLetterMatch){
+            console.log("Form Helper: Attempting to extract single letters from noisy response:", singleLetterMatch.join(','));
+            return singleLetterMatch.filter(l => l.length === 1 && l >= 'A' && l <= 'Z');
+        }
+        return null;
+      }
+    } else {
+        console.warn("Form Helper: ChatGPT response structure unexpected or empty.", data);
+    }
+  } catch (error) {
+    console.error("Form Helper: Error calling ChatGPT API:", error);
+    alert("Wystąpił błąd podczas komunikacji z API OpenAI. Sprawdź konsolę, aby uzyskać więcej informacji.");
+  }
+  return null;
+}
+
+async function markCorrectAnswers() {
   console.log("Form Helper: Starting to process questions...");
   const questionItems = document.querySelectorAll('div[data-automation-id="questionItem"]');
   if (questionItems.length === 0) {
-    console.log("Form Helper: No question items found with 'data-automation-id=\"questionItem\"'.");
+    console.log("Form Helper: No question items found.");
     return;
   }
 
-  questionItems.forEach((questionElement, index) => {
-    // Extract question text from the form
-    // This selector targets the span containing the question text, like "Spadek to:"
-    // It tries to find a text-format-content span within the heading that is not the ordinal number.
+  const apiKey = await getApiKey();
+
+  for (const questionElement of questionItems) {
     const questionTitleElement = questionElement.querySelector('span[data-automation-id="questionTitle"] span[role="heading"]');
     let pageQuestionText = '';
     if (questionTitleElement) {
-        // Attempt to find the specific span for question text.
-        // This looks for a direct child `span.text-format-content` that does NOT have `data-automation-id="questionOrdinal"`
         const potentialQuestionSpans = questionTitleElement.querySelectorAll(':scope > span.text-format-content');
         potentialQuestionSpans.forEach(span => {
             if (span.getAttribute('data-automation-id') !== 'questionOrdinal') {
-                 // And also not part of the points, though points are usually in a div
-                if (!span.closest('div[class*="-a-"]')) { // Basic check to avoid point span if it's also a span.text-format-content
+                if (!span.closest('div[class*="-a-"]')) { 
                     pageQuestionText += span.textContent + ' ';
                 }
             }
         });
         pageQuestionText = pageQuestionText.trim();
-
-        // Fallback if specific span not found, try getting all text content and cleaning.
         if (!pageQuestionText) {
              let rawText = questionTitleElement.textContent || "";
-             // Try to remove ordinal and points if they are part of the raw text
              const ordinalElement = questionTitleElement.querySelector('span[data-automation-id="questionOrdinal"]');
              if (ordinalElement) rawText = rawText.replace(ordinalElement.textContent, '');
              const pointsElement = questionTitleElement.querySelector('span[data-automation-id="questionTitlePoint"]');
              if (pointsElement) rawText = rawText.replace(pointsElement.textContent, '');
              pageQuestionText = rawText;
         }
-
-    } else {
-      console.warn(`Form Helper: Could not find question title for item ${index + 1}`);
-      return; // Skip this question item
-    }
+    } else { continue; }
 
     const normalizedPageQuestion = normalizeText(pageQuestionText);
-    if (!normalizedPageQuestion) {
-        console.warn(`Form Helper: Normalized question text is empty for item ${index + 1}: "${pageQuestionText}"`);
-        return;
-    }
+    if (!normalizedPageQuestion) { continue; }
 
-    // Find matching question in the database
     let bestMatch = null;
     let highestSimilarity = 0;
 
@@ -103,47 +210,88 @@ function markCorrectAnswers() {
       }
     });
 
+    // --- Blok obsługi odpowiedzi ---
+    let correctAnswersToMark = []; // Będzie zawierać TEKSTY poprawnych odpowiedzi
+
     if (bestMatch && highestSimilarity >= 0.90) {
-      console.log(`Form Helper: Found match for "${normalizedPageQuestion}" (Similarity: ${highestSimilarity.toFixed(2)}) with DB question ID ${bestMatch.id}`);
-      const correctDbAnswersNormalized = bestMatch.correctAnswersText.map(ans => normalizeText(ans));
-
-      // Find answer options on the page for this question
+      console.log(`Form Helper: Found LOCAL match for "${normalizedPageQuestion}" (Similarity: ${highestSimilarity.toFixed(2)})`);
+      correctAnswersToMark = bestMatch.correctAnswersText.map(ans => normalizeText(ans));
+    } else if (apiKey) {
+      console.log(`Form Helper: No local match for "${normalizedPageQuestion}". Trying ChatGPT.`);
+      
       const choiceItems = questionElement.querySelectorAll('div[data-automation-id="choiceItem"]');
-      choiceItems.forEach(choiceElement => {
-        // The text of the answer option is in a span with class 'text-format-content' and often an aria-label
-        const optionLabelElement = choiceElement.querySelector('.text-format-content'); // More specific: 'span.text-format-content.css-79' based on your HTML but css-79 might change
-        
-        if (optionLabelElement) {
-          const pageOptionText = optionLabelElement.textContent;
-          const normalizedPageOption = normalizeText(pageOptionText);
+      const optionsForApi = [];
+      let questionType = 'unknown'; 
 
-          if (correctDbAnswersNormalized.includes(normalizedPageOption)) {
-            if (!pageOptionText.trim().endsWith(' .')) {
-              optionLabelElement.textContent += '.';
-              console.log(`Form Helper: Marked correct answer: "${pageOptionText}"`);
-            }
+      choiceItems.forEach((choiceElement, choiceIndex) => {
+        const optionLabelElement = choiceElement.querySelector('span.text-format-content'); // Dostosuj selektor jeśli trzeba
+        const inputElement = choiceElement.querySelector('input[type="radio"], input[type="checkbox"]');
+
+        if (inputElement && optionLabelElement && optionLabelElement.textContent) {
+          if (questionType === 'unknown' && inputElement.type) {
+            questionType = inputElement.type === 'radio' ? 'single' : 'multiple';
           }
-        } else {
-            console.warn("Form Helper: Could not find option label element within choice item.");
+          optionsForApi.push({
+            letter: String.fromCharCode(65 + choiceIndex),
+            text: optionLabelElement.textContent.trim(),
+            normalizedText: normalizeText(optionLabelElement.textContent.trim()), // Do późniejszego dopasowania
+            element: optionLabelElement 
+          });
         }
       });
+
+      if (optionsForApi.length > 0 && questionType !== 'unknown') {
+        const gptAnswerLetters = await callChatGPT(pageQuestionText, optionsForApi, questionType, apiKey);
+        if (gptAnswerLetters && gptAnswerLetters.length > 0) {
+          console.log(`Form Helper: ChatGPT suggested letters: ${gptAnswerLetters.join(', ')}`);
+          gptAnswerLetters.forEach(letter => {
+            const foundOption = optionsForApi.find(opt => opt.letter === letter);
+            if (foundOption) {
+              correctAnswersToMark.push(foundOption.normalizedText); // Dodajemy znormalizowany tekst odpowiedzi
+            }
+          });
+        } else {
+            console.log("Form Helper: ChatGPT did not provide a valid answer or no answer.");
+        }
+      } else {
+          console.log("Form Helper: Could not determine options or question type for ChatGPT.");
+      }
     } else {
-      console.log(`Form Helper: No sufficiently strong match found for page question (best sim: ${highestSimilarity.toFixed(2)}): "${normalizedPageQuestion}"`);
+      console.log(`Form Helper: No local match and no API key configured for "${normalizedPageQuestion}".`);
     }
-  });
+
+    // --- Oznaczanie odpowiedzi ---
+    if (correctAnswersToMark.length > 0) {
+        const choiceItemsOnPage = questionElement.querySelectorAll('div[data-automation-id="choiceItem"]');
+        choiceItemsOnPage.forEach(choiceElement => {
+            const optionLabelElement = choiceElement.querySelector('span.text-format-content'); // Upewnij się, że selektor jest poprawny
+            if (optionLabelElement) {
+                const pageOptionText = optionLabelElement.textContent;
+                const normalizedPageOption = normalizeText(pageOptionText);
+
+                if (correctAnswersToMark.includes(normalizedPageOption)) {
+                    if (!pageOptionText.trim().endsWith('.')) {
+                        optionLabelElement.textContent += ' .';
+                        console.log(`Form Helper: Marked answer: "${pageOptionText}"`);
+                    }
+                }
+            }
+        });
+    }
+  } // koniec pętli po pytaniach
 }
 
-// Run the function after a short delay to ensure the form is loaded.
-// For dynamically loaded questions, a MutationObserver would be more robust.
+
+// --- Uruchomienie ---
+// (Pozostaje bez zmian - setTimeout i MutationObserver)
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(markCorrectAnswers, 2000); // Adjust delay as needed
+        setTimeout(markCorrectAnswers, 2000); 
     });
 } else {
-    setTimeout(markCorrectAnswers, 2000); // Adjust delay as needed
+    setTimeout(markCorrectAnswers, 2000); 
 }
 
-// More robust: Use MutationObserver to detect when questions appear
 const observer = new MutationObserver((mutationsList, observerInstance) => {
     for(const mutation of mutationsList) {
         if (mutation.type === 'childList') {
@@ -152,12 +300,10 @@ const observer = new MutationObserver((mutationsList, observerInstance) => {
             );
             if (questionItemsAdded || document.querySelector('div[data-automation-id="questionItem"]')) {
                  console.log("Form Helper: Detected question items or changes, re-processing.");
-                 setTimeout(markCorrectAnswers, 500); // Short delay after detection
-                 // observerInstance.disconnect(); // Optional: disconnect after first run if form loads all at once
-                 return; // Process once per batch of mutations
+                 setTimeout(markCorrectAnswers, 500); 
+                 return; 
             }
         }
     }
 });
-
 observer.observe(document.body, { childList: true, subtree: true });

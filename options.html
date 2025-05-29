@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form Helper Options</title>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; padding: 20px; width: 400px; }
+    label { display: block; margin-bottom: 5px; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; }
+    button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #45a049; }
+    .status { margin-top: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Ustawienia Form Helper</h1>
+  
+  <div>
+    <label for="apiKey">Klucz API OpenAI:</label>
+    <input type="password" id="apiKey" placeholder="Wprowadź swój klucz API OpenAI">
+  </div>
+  
+  <button id="saveButton">Zapisz Klucz</button>
+  <div id="status" class="status"></div>
+
+  <p><strong>Ważne:</strong> Twój klucz API będzie przechowywany lokalnie w przeglądarce. Pamiętaj, że korzystanie z API OpenAI może wiązać się z kosztami.</p>
+
+  <script src="options.js"></script>
+</body>
+</html>
