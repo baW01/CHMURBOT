@@ -27,7 +27,7 @@
 * Otworzy się strona ustawień rozszerzenia.
 * W polu "Klucz API OpenAI" wklej swój skopiowany klucz API.
 * Kliknij przycisk "Zapisz Klucz".
-    * ![Strona opcji rozszerzenia z polem na klucz API](https://i.ibb.co/LXzkSKWm/Zrzut-ekranu-2025-05-29-220740.png) ## Jak Używać
+    * ![Strona opcji rozszerzenia z polem na klucz API](https://i.ibb.co/LXzkSKWm/Zrzut-ekranu-2025-05-29-220740.png)
 
 ## Ważne Uwagi
 
