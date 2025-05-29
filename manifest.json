@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "MS Forms Question Helper",
+  "version": "1.0",
+  "description": "Highlights correct answers in Microsoft Forms based on a predefined question database.",
+  "permissions": [
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://forms.office.com/*",
+    "https://forms.microsoft.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://forms.office.com/Pages/ResponsePage.aspx*", "https://forms.microsoft.com/*"],
+      "js": ["database.js", "content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
