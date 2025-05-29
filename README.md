@@ -13,7 +13,8 @@
 2.  **Otwórz Chrome i przejdź do Rozszerzeń**: Wpisz `chrome://extensions/` w pasku adresu przeglądarki Chrome i naciśnij Enter.
 3.  **Włącz Tryb Programisty**: W prawym górnym rogu strony rozszerzeń znajdź przełącznik "Tryb programisty" i włącz go.
 4.  **Załaduj rozszerzenie**: Kliknij przycisk "Załaduj rozpakowane" (pojawi się po włączeniu Trybu Programisty).
-    * ![Przycisk Załaduj rozpakowane](https://i.ibb.co/4ZVQzYpp/Zrzut-ekranu-2025-05-29-220518.png) 5.  **Wybierz folder**: W oknie dialogowym wybierz folder, w którym zapisałeś pliki rozszerzenia.
+    * ![Przycisk Załaduj rozpakowane](https://i.ibb.co/4ZVQzYpp/Zrzut-ekranu-2025-05-29-220518.png)
+5.  **Wybierz folder**: W oknie dialogowym wybierz folder, w którym zapisałeś pliki rozszerzenia.
 6.  Rozszerzenie powinno teraz być zainstalowane i aktywne. Ikona rozszerzenia pojawi się na pasku narzędzi Chrome.
 
 ## Konfiguracja Klucza API OpenAI
