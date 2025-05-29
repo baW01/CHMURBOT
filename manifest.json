@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "MS Forms Question Helper",
-  "version": "1.1",
-  "description": "Highlights correct answers in Microsoft Forms by checking a database or using OpenAI API.",
+  "name": "CHMURBot",
+  "version": "1.2",
+  "description": "Bot pomagajacy wypełnić formularze Microsoft Forms",
   "permissions": [
     "scripting",
     "storage"
