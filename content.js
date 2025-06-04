@@ -270,7 +270,7 @@ async function markCorrectAnswers() {
                 const normalizedPageOption = normalizeText(pageOptionText);
 
                 if (correctAnswersToMark.includes(normalizedPageOption)) {
-                    if (!pageOptionText.trim().endsWith('.')) {
+                    if (!pageOptionText.trim().endsWith(' .')) {
                         optionLabelElement.textContent += ' .';
                         console.log(`Form Helper: Marked answer: "${pageOptionText}"`);
                     }
