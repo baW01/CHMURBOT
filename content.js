@@ -1,21 +1,21 @@
 // content.js
 
 // (Funkcje normalizeText, levenshteinDistance, calculateSimilarity pozostają bez zmian z poprzedniej wersji)
+const processedQuestions = new Set();
+
 function sleep(ms) {
   return new Promise(res => setTimeout(res, ms));
 }
-// zmienna, która przechowuje timestamp ostatniego wywołania API
 let lastApiCall = 0;
-
-async function throttledCallChatGPT(...args) {
+async function throttledCallChatGPT(questionText, optionsArray, questionType, apiKey) {
   const now = Date.now();
-  const elapsed = now - lastApiCall;
-  const minInterval = 1000; // ms
-  if (elapsed < minInterval) {
-    await sleep(minInterval - elapsed);
+  const since = now - lastApiCall;
+  const minInterval = 500; // ms
+  if (since < minInterval) {
+    await sleep(minInterval - since);
   }
   lastApiCall = Date.now();
-  return callChatGPT(...args);
+  return callChatGPT(questionText, optionsArray, questionType, apiKey);
 }
 
 
@@ -191,6 +191,8 @@ async function markCorrectAnswers() {
   const apiKey = await getApiKey();
 
   for (const questionElement of questionItems) {
+    const qid = questionElement.getAttribute('id') || questionElement.dataset.automationId;
+    if (processedQuestions.has(qid)) continue;
     const questionTitleElement = questionElement.querySelector('[data-automation-id="questionTitle"] [role="heading"], [data-automation-id="questionTitle"]');
     let pageQuestionText = '';
     if (questionTitleElement) {
@@ -260,7 +262,7 @@ async function markCorrectAnswers() {
 
       if (optionsForApi.length > 0 && questionType !== 'unknown') {
         const gptAnswerLetters = await throttledCallChatGPT(pageQuestionText, optionsForApi, questionType, apiKey);
-        await sleep(500);
+        processedQuestions.add(qid);
         if (gptAnswerLetters && gptAnswerLetters.length > 0) {
           console.log(`Form Helper: ChatGPT suggested letters: ${gptAnswerLetters.join(', ')}`);
           gptAnswerLetters.forEach(letter => {
