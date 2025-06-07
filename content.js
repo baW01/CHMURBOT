@@ -173,7 +173,7 @@ async function markCorrectAnswers() {
   const apiKey = await getApiKey();
 
   for (const questionElement of questionItems) {
-    const questionTitleElement = questionElement.querySelector('span[data-automation-id="questionTitle"] span[role="heading"]');
+    const questionTitleElement = questionElement.querySelector('[data-automation-id="questionTitle"] [role="heading"], [data-automation-id="questionTitle"]');
     let pageQuestionText = '';
     if (questionTitleElement) {
         const potentialQuestionSpans = questionTitleElement.querySelectorAll(':scope > span.text-format-content');
