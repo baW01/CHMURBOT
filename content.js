@@ -1,7 +1,8 @@
 // content.js
 
 // (Funkcje normalizeText, levenshteinDistance, calculateSimilarity pozostają bez zmian z poprzedniej wersji)
-const processedQuestions = new Set();
+const processedQuestions = new WeakSet();
+
 
 function sleep(ms) {
   return new Promise(res => setTimeout(res, ms));
@@ -10,7 +11,7 @@ let lastApiCall = 0;
 async function throttledCallChatGPT(questionText, optionsArray, questionType, apiKey) {
   const now = Date.now();
   const since = now - lastApiCall;
-  const minInterval = 500; // ms
+  const minInterval = 2000; // ms
   if (since < minInterval) {
     await sleep(minInterval - since);
   }
@@ -192,7 +193,7 @@ async function markCorrectAnswers() {
 
   for (const questionElement of questionItems) {
     const qid = questionElement.getAttribute('id') || questionElement.dataset.automationId;
-    if (processedQuestions.has(qid)) continue;
+    if (processedQuestions.has(questionElement)) continue;
     const questionTitleElement = questionElement.querySelector('[data-automation-id="questionTitle"] [role="heading"], [data-automation-id="questionTitle"]');
     let pageQuestionText = '';
     if (questionTitleElement) {
@@ -262,7 +263,6 @@ async function markCorrectAnswers() {
 
       if (optionsForApi.length > 0 && questionType !== 'unknown') {
         const gptAnswerLetters = await throttledCallChatGPT(pageQuestionText, optionsForApi, questionType, apiKey);
-        processedQuestions.add(qid);
         if (gptAnswerLetters && gptAnswerLetters.length > 0) {
           console.log(`Form Helper: ChatGPT suggested letters: ${gptAnswerLetters.join(', ')}`);
           gptAnswerLetters.forEach(letter => {
@@ -299,6 +299,8 @@ async function markCorrectAnswers() {
             }
         });
     }
+    processedQuestions.add(questionElement);
+    await sleep(2000);
   } // koniec pętli po pytaniach
 }
 
@@ -312,14 +314,14 @@ if (document.readyState === 'loading') {
 } else {
     setTimeout(markCorrectAnswers, 2000); 
 }
-
+let isProcessing = false;
 const observer = new MutationObserver((mutationsList, observerInstance) => {
     for(const mutation of mutationsList) {
         if (mutation.type === 'childList') {
             const questionItemsAdded = Array.from(mutation.addedNodes).some(node =>
                 node.nodeType === Node.ELEMENT_NODE && node.matches('div[data-automation-id="questionItem"]')
             );
-            if (questionItemsAdded || document.querySelector('div[data-automation-id="questionItem"]')) {
+            if (questionItemsAdded) {
                  console.log("Form Helper: Detected question items or changes, re-processing.");
                  setTimeout(markCorrectAnswers, 500); 
                  return; 
