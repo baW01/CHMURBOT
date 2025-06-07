@@ -119,9 +119,9 @@ Twoja odpowiedź (TYLKO litera/litery, np. B lub A,C):`;
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Form Helper: ChatGPT API Error:", response.status, errorData);
-      if (response.status === 401) alert("Błąd API OpenAI: Nieautoryzowany. Sprawdź swój klucz API w opcjach rozszerzenia.");
-      else if (response.status === 429) alert("Błąd API OpenAI: Przekroczono limit zapytań (Rate Limit). Spróbuj później lub sprawdź swoje limity w panelu OpenAI.");
-      else alert(`Błąd API OpenAI: ${errorData.error?.message || response.statusText}`);
+      if (response.status === 401) console.log("Błąd API OpenAI: Nieautoryzowany. Sprawdź swój klucz API w opcjach rozszerzenia.");
+      else if (response.status === 429) console.log("Błąd API OpenAI: Przekroczono limit zapytań (Rate Limit). Spróbuj później lub sprawdź swoje limity w panelu OpenAI.");
+      else console.log(`Błąd API OpenAI: ${errorData.error?.message || response.statusText}`);
       return null;
     }
 
@@ -157,7 +157,7 @@ Twoja odpowiedź (TYLKO litera/litery, np. B lub A,C):`;
     }
   } catch (error) {
     console.error("Form Helper: Error calling ChatGPT API:", error);
-    alert("Wystąpił błąd podczas komunikacji z API OpenAI. Sprawdź konsolę, aby uzyskać więcej informacji.");
+    console.log("Wystąpił błąd podczas komunikacji z API OpenAI. Sprawdź konsolę, aby uzyskać więcej informacji.");
   }
   return null;
 }
