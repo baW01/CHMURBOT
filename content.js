@@ -1,6 +1,24 @@
 // content.js
 
 // (Funkcje normalizeText, levenshteinDistance, calculateSimilarity pozostają bez zmian z poprzedniej wersji)
+function sleep(ms) {
+  return new Promise(res => setTimeout(res, ms));
+}
+// zmienna, która przechowuje timestamp ostatniego wywołania API
+let lastApiCall = 0;
+
+async function throttledCallChatGPT(...args) {
+  const now = Date.now();
+  const elapsed = now - lastApiCall;
+  const minInterval = 1000; // ms
+  if (elapsed < minInterval) {
+    await sleep(minInterval - elapsed);
+  }
+  lastApiCall = Date.now();
+  return callChatGPT(...args);
+}
+
+
 function normalizeText(text) {
   if (!text) return '';
   return text
@@ -241,7 +259,8 @@ async function markCorrectAnswers() {
       });
 
       if (optionsForApi.length > 0 && questionType !== 'unknown') {
-        const gptAnswerLetters = await callChatGPT(pageQuestionText, optionsForApi, questionType, apiKey);
+        const gptAnswerLetters = await throttledCallChatGPT(pageQuestionText, optionsForApi, questionType, apiKey);
+        await sleep(500);
         if (gptAnswerLetters && gptAnswerLetters.length > 0) {
           console.log(`Form Helper: ChatGPT suggested letters: ${gptAnswerLetters.join(', ')}`);
           gptAnswerLetters.forEach(letter => {
