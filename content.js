@@ -71,7 +71,7 @@ async function getApiKey() {
 
 async function callChatGPT(questionText, optionsArray, questionType, apiKey) {
   console.log("Form Helper: Calling ChatGPT API for question:", questionText.substring(0, 50) + "...");
-  const modelToUse = "gpt-4.1-nano"; // Możesz zmienić na nowszy model np. gpt-4o, gpt-4-turbo
+  const modelToUse = "gpt-4.1"; // Możesz zmienić na nowszy model np. gpt-4o, gpt-4-turbo
 
   let optionsString = "";
   optionsArray.forEach(opt => {
