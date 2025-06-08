@@ -179,6 +179,227 @@ const questionDatabase = [
     ],
     correctAnswersText: ["Jednostki Żądań (RU)"]
   },
+  {
+  id: "AZ204_P18",
+  questionText: "Twoja aplikacja webowa jest hostowana w Azure App Service i korzysta z Azure SQL Database. Musisz wdrożyć nową wersję aplikacji, zapewniając minimalny przestój oraz możliwość szybkiego rollbacku. Co powinieneś zrobić?",
+  optionsForReference: [
+    "Wdrożyć nową wersję bezpośrednio na produkcyjnym slotcie.",
+    "Skorzystać z mechanizmu slotów wdrożeniowych (deployment slots), wdrożyć na slot staging, przetestować i zamienić sloty.",
+    "Utworzyć kopię zapasową bazy danych, wdrożyć aplikację, a następnie odtworzyć bazę w razie awarii.",
+    "Wdrożyć nową aplikację do osobnego App Service i zmienić rekord DNS."
+  ],
+  correctAnswersText: [
+    "Skorzystać z mechanizmu slotów wdrożeniowych (deployment slots), wdrożyć na slot staging, przetestować i zamienić sloty."
+  ]
+},
+{
+  id: "AZ204_P19",
+  questionText: "Masz Azure Function, która ma wykonywać długotrwałe operacje (>10 minut). Obecnie działa w planie Consumption i regularnie jest przerywana. Jak rozwiązać ten problem?",
+  optionsForReference: [
+    "Przenieść funkcję do planu Premium lub dedykowanego App Service Plan, który nie ma limitu czasu wykonywania.",
+    "Podzielić funkcję na mniejsze fragmenty wykonywane poniżej limitu.",
+    "Zwiększyć limit czasu wykonania w planie Consumption w portalu Azure.",
+    "Przenieść długotrwałe zadania do Azure Logic Apps."
+  ],
+  correctAnswersText: [
+    "Przenieść funkcję do planu Premium lub dedykowanego App Service Plan, który nie ma limitu czasu wykonywania."
+  ]
+},
+{
+  id: "AZ204_P20",
+  questionText: "Twoja aplikacja wymaga skalowania automatycznego na podstawie metryk CPU i liczby zapytań HTTP. Jak skonfigurować skalowanie w Azure App Service?",
+  optionsForReference: [
+    "Skonfigurować reguły autoskalowania w Azure Monitor, definiując metryki i progi skalowania.",
+    "Ręcznie zwiększać liczbę instancji App Service.",
+    "Zmienić plan App Service na wyższy.",
+    "Przenieść aplikację do Azure Kubernetes Service (AKS)."
+  ],
+  correctAnswersText: [
+    "Skonfigurować reguły autoskalowania w Azure Monitor, definiując metryki i progi skalowania."
+  ]
+},
+{
+  id: "AZ204_P21",
+  questionText: "Musisz wywołać Azure Function z poziomu aplikacji klienckiej, korzystając z OAuth 2.0 i Azure AD dla zabezpieczenia. Które kroki musisz wykonać?",
+  optionsForReference: [
+    "Zarejestrować aplikację kliencką i funkcję w Azure AD, przyznać odpowiednie uprawnienia i uzyskać token dostępu.",
+    "Wygenerować klucz funkcji i przesłać go w nagłówkach HTTP.",
+    "Skonfigurować funkcję jako publiczną.",
+    "Skorzystać z klucza konta Storage do autoryzacji."
+  ],
+  correctAnswersText: [
+    "Zarejestrować aplikację kliencką i funkcję w Azure AD, przyznać odpowiednie uprawnienia i uzyskać token dostępu."
+  ]
+},
+{
+  id: "AZ204_P22",
+  questionText: "Chcesz, aby aplikacja korzystająca z Azure Cosmos DB miała gwarancję spójności danych, ale jednocześnie wysoką dostępność i niskie opóźnienia. Który model spójności wybierzesz?",
+  optionsForReference: [
+    "Eventual Consistency",
+    "Session Consistency",
+    "Strong Consistency",
+    "Bounded Staleness"
+  ],
+  correctAnswersText: [
+    "Session Consistency"
+  ]
+},
+{
+  id: "AZ204_P23",
+  questionText: "Musisz zapewnić, aby Twoja Azure Function zapisywała logi i metryki do centralnego systemu monitorowania z alertami. Jakie rozwiązanie wdrożysz?",
+  optionsForReference: [
+    "Skonfigurujesz Application Insights i zaintegrujesz z funkcją.",
+    "Wykorzystasz Azure Monitor Metrics bez Application Insights.",
+    "Logi zapiszesz lokalnie w plikach.",
+    "Wykorzystasz Azure Event Hubs do zbierania logów."
+  ],
+  correctAnswersText: [
+    "Skonfigurujesz Application Insights i zaintegrujesz z funkcją."
+  ]
+},
+{
+  id: "AZ204_P24",
+  questionText: "Masz aplikację korzystającą z Azure Blob Storage i chcesz udostępnić wybrane pliki z ograniczonym czasem ważności. Jaki mechanizm wykorzystasz?",
+  optionsForReference: [
+    "Ustawienie publicznego dostępu do kontenera.",
+    "Generowanie SAS token (Shared Access Signature) z określonym czasem wygaśnięcia.",
+    "Kopiowanie plików na serwer FTP.",
+    "Udostępnienie całego kontenera jako publicznego."
+  ],
+  correctAnswersText: [
+    "Generowanie SAS token (Shared Access Signature) z określonym czasem wygaśnięcia."
+  ]
+},
+{
+  id: "AZ204_P25",
+  questionText: "Chcesz zabezpieczyć API hostowane w Azure API Management, by wymagało uwierzytelnienia klienta przez Azure Active Directory i weryfikowało role użytkowników. Co musisz skonfigurować?",
+  optionsForReference: [
+    "Konfigurację OAuth 2.0 z AAD oraz polityki walidacji tokenów JWT.",
+    "Klucze API bez uwierzytelnienia.",
+    "Autoryzację na poziomie IP.",
+    "Brak zabezpieczeń."
+  ],
+  correctAnswersText: [
+    "Konfigurację OAuth 2.0 z AAD oraz polityki walidacji tokenów JWT."
+  ]
+},
+{
+  id: "AZ204_P26",
+  questionText: "Twoja aplikacja korzysta z Azure Service Bus. Masz problem z opóźnieniami i dużym natężeniem ruchu. Co możesz zrobić, by zwiększyć skalowalność?",
+  optionsForReference: [
+    "Użyć partycjonowanych kolejek i zwiększyć liczbę odbiorców (subscriptions).",
+    "Zmniejszyć rozmiar wiadomości.",
+    "Przenieść się na Azure Event Hubs.",
+    "Używać jednego odbiorcy."
+  ],
+  correctAnswersText: [
+    "Użyć partycjonowanych kolejek i zwiększyć liczbę odbiorców (subscriptions)."
+  ]
+},
+{
+  id: "AZ204_P27",
+  questionText: "Potrzebujesz przechowywać i bezpiecznie udostępniać tajne dane (hasła, klucze) dla wielu aplikacji w Azure. Co jest najlepszym rozwiązaniem?",
+  optionsForReference: [
+    "Azure Key Vault z odpowiednimi politykami dostępu.",
+    "Pliki konfiguracyjne w repozytorium kodu.",
+    "Zmienne środowiskowe na maszynach.",
+    "Baza danych Azure SQL bez szyfrowania."
+  ],
+  correctAnswersText: [
+    "Azure Key Vault z odpowiednimi politykami dostępu."
+  ]
+},
+{
+  id: "AZ204_P28",
+  questionText: "Chcesz przenieść maszynę wirtualną z jednej subskrypcji Azure do innej, zachowując wszystkie ustawienia i dane. Jaka jest najlepsza metoda?",
+  optionsForReference: [
+    "Użyć funkcji \"Move resources\" w Azure Portal, wybierając VM i powiązane zasoby.",
+    "Eksportować obraz maszyny i tworzyć nową w drugiej subskrypcji.",
+    "Tworzyć nową VM i ręcznie konfigurować.",
+    "Skopiować dyski VHD lokalnie."
+  ],
+  correctAnswersText: [
+    "Użyć funkcji \"Move resources\" w Azure Portal, wybierając VM i powiązane zasoby."
+  ]
+},
+{
+  id: "AZ204_P29",
+  questionText: "Twoja aplikacja wymaga automatycznego skalowania bazujące na liczbie wiadomości w Azure Storage Queue. Jak to zrobić?",
+  optionsForReference: [
+    "Skorzystać z Azure Functions z wyzwalaczem kolejki i planem Consumption.",
+    "Ręcznie monitorować i skalować.",
+    "Zwiększyć liczbę instancji App Service.",
+    "Użyć Azure Logic Apps."
+  ],
+  correctAnswersText: [
+    "Skorzystać z Azure Functions z wyzwalaczem kolejki i planem Consumption."
+  ]
+},
+{
+  id: "AZ204_P30",
+  questionText: "Chcesz wdrożyć nową wersję kontenerów w Azure Container Instances (ACI) z minimalnym czasem przestoju. Co powinieneś zrobić?",
+  optionsForReference: [
+    "Utworzyć nowy kontener z nową wersją i zmienić endpoint na nowy kontener po zakończeniu wdrożenia.",
+    "Nadpisać istniejący kontener.",
+    "Zrestartować kontener.",
+    "Użyć Azure Kubernetes Service zamiast ACI."
+  ],
+  correctAnswersText: [
+    "Utworzyć nowy kontener z nową wersją i zmienić endpoint na nowy kontener po zakończeniu wdrożenia."
+  ]
+},
+{
+  id: "AZ204_P31",
+  questionText: "Masz aplikację webową, która korzysta z Azure AD B2C do uwierzytelniania użytkowników. Chcesz umożliwić logowanie przez media społecznościowe (Google, Facebook). Jak to zrobić?",
+  optionsForReference: [
+    "Skonfigurować Identity Providers w Azure AD B2C, dodając Google i Facebook.",
+    "Dodawać manualnie logowanie OAuth w aplikacji.",
+    "Korzystać z lokalnego uwierzytelniania.",
+    "Nie można tego zrobić."
+  ],
+  correctAnswersText: [
+    "Skonfigurować Identity Providers w Azure AD B2C, dodając Google i Facebook."
+  ]
+},
+{
+  id: "AZ204_P32",
+  questionText: "Twoja aplikacja wysyła powiadomienia push do użytkowników urządzeń mobilnych. Chcesz korzystać z Azure Notification Hubs. Jakie kroki należy wykonać?",
+  optionsForReference: [
+    "Utworzyć Notification Hub, skonfigurować platformę docelową (np. Firebase, APNS) i zaimplementować SDK.",
+    "Wysyłać powiadomienia bezpośrednio z backendu.",
+    "Korzystać z Azure SignalR.",
+    "Używać Azure Event Grid."
+  ],
+  correctAnswersText: [
+    "Utworzyć Notification Hub, skonfigurować platformę docelową (np. Firebase, APNS) i zaimplementować SDK."
+  ]
+},
+{
+  id: "AZ204_P33",
+  questionText: "Masz Azure Logic App, która łączy się z bazą danych SQL i wywołuje funkcję HTTP. Chcesz zapewnić, aby działała tylko w godzinach pracy. Jak to osiągnąć?",
+  optionsForReference: [
+    "Skonfigurować wyzwalacz Logic App z warunkiem czasowym.",
+    "Uruchamiać ręcznie.",
+    "Usunąć wyzwalacz.",
+    "Skonfigurować Azure Function Timer."
+  ],
+  correctAnswersText: [
+    "Skonfigurować wyzwalacz Logic App z warunkiem czasowym."
+  ]
+},
+{
+  id: "AZ204_P34",
+  questionText: "Twoja aplikacja potrzebuje mechanizmu sesji użytkownika, który jest skalowalny i działa w wielu instancjach Azure App Service. Co zastosujesz?",
+  optionsForReference: [
+    "Azure Cache for Redis jako magazyn sesji.",
+    "Pamięć lokalną serwera (In-Proc Session).",
+    "Pliki sesji na dysku lokalnym.",
+    "Baza danych SQL bez cache."
+  ],
+  correctAnswersText: [
+    "Azure Cache for Redis jako magazyn sesji."
+  ]
+},
 
   // === AZ-204 Pytania Wielokrotnego Wyboru ===
   {
@@ -390,6 +611,48 @@ const questionDatabase = [
     ],
     correctAnswersText: ["Punkty końcowe publikowania (Publishing Endpoints)", "Zawsze włączone (Always On)", "Własne nazwy domen (Custom Domain Names)"]
   },
+  {
+  id: "AZ204_WM19",
+  questionText: "Chcesz zabezpieczyć Azure Function, tak aby tylko konkretne aplikacje mogły ją wywoływać. Jakie mechanizmy uwierzytelniania i autoryzacji Azure możesz zastosować?",
+  optionsForReference: [
+    "Klucze funkcji (Function Keys) i autoryzacja na poziomie HTTP Triggera.",
+    "Identity Provider OAuth 2.0 z Azure AD.",
+    "Publiczny dostęp bez uwierzytelniania.",
+    "Uwierzytelnianie Basic Auth w HTTP headers."
+  ],
+  correctAnswersText: [
+    "Klucze funkcji (Function Keys) i autoryzacja na poziomie HTTP Triggera.",
+    "Identity Provider OAuth 2.0 z Azure AD."
+  ]
+},
+{
+  id: "AZ204_WM20",
+  questionText: "Twoja aplikacja działa na Azure Kubernetes Service (AKS). Chcesz wdrożyć nową wersję kontenera bez przestojów i z możliwością łatwego rollbacku. Jaka strategia wdrażania będzie najlepsza?",
+  optionsForReference: [
+    "Rolling Update z konfiguracją readiness probes i liveness probes.",
+    "Recreate Deployment (zatrzymanie i ponowne uruchomienie).",
+    "Blue-Green Deployment (utworzenie równoległego środowiska).",
+    "Wdrożenie na nowym klastrze AKS."
+  ],
+  correctAnswersText: [
+    "Rolling Update z konfiguracją readiness probes i liveness probes.",
+    "Blue-Green Deployment (utworzenie równoległego środowiska)."
+  ]
+},
+{
+  id: "AZ204_WM21",
+  questionText: "Wdrażasz aplikację na Azure App Service z koniecznością separacji środowisk (dev, test, prod) oraz automatyzacji wdrożeń. Jakie praktyki zastosujesz?",
+  optionsForReference: [
+    "Utworzenie osobnych slotów wdrożeniowych dla dev i test, a prod jako produkcyjny slot.",
+    "Wdrażanie bezpośrednio na produkcyjnym środowisku.",
+    "Użycie Azure DevOps Pipelines do CI/CD z etapami dla środowisk.",
+    "Wdrażanie ręcznie z lokalnego komputera."
+  ],
+  correctAnswersText: [
+    "Utworzenie osobnych slotów wdrożeniowych dla dev i test, a prod jako produkcyjny slot.",
+    "Użycie Azure DevOps Pipelines do CI/CD z etapami dla środowisk."
+  ]
+},
 
   // === AZ-900 Pytania Jednokrotnego Wyboru ===
   {
@@ -548,6 +811,359 @@ const questionDatabase = [
     ],
     correctAnswersText: ["Azure Policy"]
   },
+  {
+  id: "AZ900_P18",
+  questionText: "Co lub jakie usługi oferuje Microsoft Azure?",
+  optionsForReference: [
+    "Tylko usługi SaaS",
+    "Tylko maszyny wirtualne",
+    "Zintegrowaną platformę usług chmurowych",
+    "Tylko usługi PaaS",
+    "Hosting lokalny"
+  ],
+  correctAnswersText: [
+    "Zintegrowaną platformę usług chmurowych"
+  ]
+},
+{
+  id: "AZ900_P19",
+  questionText: "Co oznacza Azure Region?",
+  optionsForReference: [
+    "Pojedynczy serwer w centrum danych",
+    "Obszar geograficzny zawierający jedno lub więcej centrów danych",
+    "Narzędzie do monitorowania zasobów",
+    "Subskrypcja klienta",
+    "Konfiguracja sieci prywatnej"
+  ],
+  correctAnswersText: [
+    "Obszar geograficzny zawierający jedno lub więcej centrów danych"
+  ]
+},
+{
+  id: "AZ900_P20",
+  questionText: "Którego planu usługi Azure App Service powinni użyć administratorzy, którzy wymagają wsparcia dla HTTPS, co najmniej dwóch instancji, wysokiej dostępności i co najmniej 10 GB pamięci, przy minimalnych kosztach?",
+  optionsForReference: [
+    "Wolny (Free)",
+    "Współdzielony (Shared)",
+    "Standard",
+    "Podstawowy (Basic)"
+  ],
+  correctAnswersText: [
+    "Standard"
+  ]
+},
+{
+  id: "AZ900_P21",
+  questionText: "Jaką korzyść z Azure powinni podkreślić przy budowie środowiska testowego, które musi szybko rosnąć i maleć oraz umożliwiać łatwe zarządzanie VM i automatyczne skalowanie?",
+  optionsForReference: [
+    "Stała alokacja zasobów",
+    "Lokalizacja danych",
+    "Skalowalność i elastyczność zasobów na żądanie",
+    "Jednorazowa opłata za usługę"
+  ],
+  correctAnswersText: [
+    "Skalowalność i elastyczność zasobów na żądanie"
+  ]
+},
+{
+  id: "AZ900_P22",
+  questionText: "Której usługi Azure należy użyć do hostowania prywatnej sieci w chmurze, która pozwoli na bezpieczne połączenie lokalnych zasobów z usługami chmurowymi?",
+  optionsForReference: [
+    "Azure DNS",
+    "Azure Virtual Network (VNet)",
+    "Azure Content Delivery Network",
+    "Azure Blob Storage"
+  ],
+  correctAnswersText: [
+    "Azure Virtual Network (VNet)"
+  ]
+},
+{
+  id: "AZ900_P23",
+  questionText: "Która usługa Azure jest najlepszym wyborem do łatwego zarządzania tożsamościami użytkowników i uwierzytelnianiem, z uwierzytelnieniem wieloskładnikowym?",
+  optionsForReference: [
+    "Azure Monitor",
+    "Azure DevOps",
+    "Azure Active Directory (Azure AD)",
+    "Azure Firewall"
+  ],
+  correctAnswersText: [
+    "Azure Active Directory (Azure AD)"
+  ]
+},
+{
+  id: "AZ900_P24",
+  questionText: "Której usługi Azure powinni użyć deweloperzy, którzy chcą hostować aplikację z automatycznym skalowaniem i zarządzanym środowiskiem bez konfiguracji serwerów?",
+  optionsForReference: [
+    "Azure Virtual Machines",
+    "Azure App Service",
+    "Azure SQL Database",
+    "Azure Kubernetes Service"
+  ],
+  correctAnswersText: [
+    "Azure App Service"
+  ]
+},
+{
+  id: "AZ900_P25",
+  questionText: "Jaką usługę Azure należy wybrać do skalowalnego przechowywania dużych plików multimedialnych i dokumentów dostępnych z wielu lokalizacji?",
+  optionsForReference: [
+    "Azure SQL Database",
+    "Azure Blob Storage",
+    "Azure Virtual Machines",
+    "Azure Active Directory"
+  ],
+  correctAnswersText: [
+    "Azure Blob Storage"
+  ]
+},
+{
+  id: "AZ900_P26",
+  questionText: "Który dokument zapewni informacje o gwarantowanym czasie działania usługi w Azure?",
+  optionsForReference: [
+    "Umowa SLA (Service Level Agreement)",
+    "Polityka prywatności",
+    "Regulamin użytkowania",
+    "Warunki licencyjne"
+  ],
+  correctAnswersText: [
+    "Umowa SLA (Service Level Agreement)"
+  ]
+},
+{
+  id: "AZ900_P27",
+  questionText: "Jakiego modelu rozliczeniowego powinna używać organizacja, która chce płacić tylko za rzeczywiste wykorzystanie zasobów w Azure?",
+  optionsForReference: [
+    "Plan miesięczny abonamentowy",
+    "Licencja wieczysta",
+    "Pay-As-You-Go",
+    "Plan roczny"
+  ],
+  correctAnswersText: [
+    "Pay-As-You-Go"
+  ]
+},
+{
+  id: "AZ900_P28",
+  questionText: "Która usługa Azure umożliwia monitorowanie działania aplikacji i infrastruktury oraz szybkie reagowanie na problemy?",
+  optionsForReference: [
+    "Azure DevOps",
+    "Azure Security Center",
+    "Azure Monitor",
+    "Azure Active Directory"
+  ],
+  correctAnswersText: [
+    "Azure Monitor"
+  ]
+},
+{
+  id: "AZ900_P29",
+  questionText: "Jaką architekturę chmury należy zastosować, aby połączyć zasoby lokalne w data center z chmurą Azure i zarządzać nimi jako jedną infrastrukturą?",
+  optionsForReference: [
+    "Chmura publiczna",
+    "Chmura hybrydowa",
+    "Chmura prywatna",
+    "Chmura społecznościowa"
+  ],
+  correctAnswersText: [
+    "Chmura hybrydowa"
+  ]
+},
+{
+  id: "AZ900_P30",
+  questionText: "Jaką usługę Azure powinieneś użyć do globalnego rozproszenia użytkowników i równoważenia ruchu między wieloma regionami?",
+  optionsForReference: [
+    "Azure Blob Storage",
+    "Azure Virtual Machines",
+    "Azure Traffic Manager",
+    "Azure DevOps"
+  ],
+  correctAnswersText: [
+    "Azure Traffic Manager"
+  ]
+},
+{
+  id: "AZ900_P31",
+  questionText: "Jaką usługę Azure powinni wybrać DevOps, aby automatycznie zarządzać wdrożeniem, skalowaniem i aktualizacjami aplikacji webowych bez zarządzania VM?",
+  optionsForReference: [
+    "Azure Virtual Machines",
+    "Azure Kubernetes Service",
+    "Azure App Service",
+    "Azure Blob Storage"
+  ],
+  correctAnswersText: [
+    "Azure App Service"
+  ]
+},
+{
+  id: "AZ900_P32",
+  questionText: "Jaką cechę Azure należy uwzględnić, aby wszystkie dane były przechowywane wyłącznie na terenie UE?",
+  optionsForReference: [
+    "Model płatności",
+    "Lokalizację regionów (region Azure)",
+    "Usługę monitorowania",
+    "Usługę DNS"
+  ],
+  correctAnswersText: [
+    "Lokalizację regionów (region Azure)"
+  ]
+},
+{
+  id: "AZ900_P33",
+  questionText: "Jaką usługę należy wdrożyć, aby ochraniać zasoby Azure przed zagrożeniami, monitorować luki i automatyzować działania naprawcze?",
+  optionsForReference: [
+    "Azure DevOps",
+    "Azure Monitor",
+    "Azure Security Center",
+    "Azure Active Directory"
+  ],
+  correctAnswersText: [
+    "Azure Security Center"
+  ]
+},
+{
+  id: "AZ900_P34",
+  questionText: "Którego rozwiązania powinni użyć, aby zapewnić rozproszony system uwierzytelniania i zarządzania tożsamościami użytkowników w wielu aplikacjach?",
+  optionsForReference: [
+    "Azure Blob Storage",
+    "Azure Virtual Machines",
+    "Azure Active Directory (Azure AD)",
+    "Azure Functions"
+  ],
+  correctAnswersText: [
+    "Azure Active Directory (Azure AD)"
+  ]
+},
+{
+  id: "AZ900_P35",
+  questionText: "Która usługa umożliwia analizę kosztów i zużycia zasobów w Azure oraz optymalizację wydatków?",
+  optionsForReference: [
+    "Azure DevOps",
+    "Azure Security Center",
+    "Azure Cost Management + Billing",
+    "Azure Monitor"
+  ],
+  correctAnswersText: [
+    "Azure Cost Management + Billing"
+  ]
+},
+{
+  id: "AZ900_P36",
+  questionText: "Jaką cechę Azure wykorzystasz, aby środowisko testowe można było szybko tworzyć i usuwać bez ponoszenia niepotrzebnych kosztów?",
+  optionsForReference: [
+    "Skalowalność",
+    "Trwałość danych",
+    "Elastyczność i szybkość tworzenia zasobów",
+    "Dostępność 24/7"
+  ],
+  correctAnswersText: [
+    "Elastyczność i szybkość tworzenia zasobów"
+  ]
+},
+{
+  id: "AZ900_P37",
+  questionText: "Firma chce używać narzędzia do zarządzania cyklem życia aplikacji, od kodu do wdrożenia w Azure. Co wybrać?",
+  optionsForReference: [
+    "Azure Monitor",
+    "Azure Security Center",
+    "Azure DevOps",
+    "Azure Active Directory"
+  ],
+  correctAnswersText: [
+    "Azure DevOps"
+  ]
+},
+{
+  id: "AZ900_P38",
+  questionText: "Jakiego rozwiązania serverless użyjesz, które automatycznie skaluje się i rozlicza za czas wykonywania funkcji?",
+  optionsForReference: [
+    "Azure Virtual Machines",
+    "Azure App Service",
+    "Azure Functions",
+    "Azure Kubernetes Service"
+  ],
+  correctAnswersText: [
+    "Azure Functions"
+  ]
+},
+{
+  id: "AZ900_P39",
+  questionText: "Twoja aplikacja wymaga globalnego, niskolatencyjnego dostępu do danych rozproszonych geograficznie. Której bazy danych użyjesz?",
+  optionsForReference: [
+    "Azure SQL Database",
+    "Azure Blob Storage",
+    "Azure Cosmos DB",
+    "Azure Data Lake"
+  ],
+  correctAnswersText: [
+    "Azure Cosmos DB"
+  ]
+},
+{
+  id: "AZ900_P40",
+  questionText: "Które narzędzie umożliwi wymuszenie silnych haseł i okresowych zmian haseł w kontach użytkowników w Azure?",
+  optionsForReference: [
+    "Azure Security Center",
+    "Azure DevOps",
+    "Azure Active Directory Password Policies",
+    "Azure Active Directory"
+  ],
+  correctAnswersText: [
+    "Azure Active Directory Password Policies"
+  ]
+},
+{
+  id: "AZ900_P41",
+  questionText: "Jaką korzyść zapewni szyfrowanie automatyczne zarządzane przez platformę dla danych przechowywanych w Azure Storage?",
+  optionsForReference: [
+    "Backup danych",
+    "Encryption-at-rest",
+    "Replikację danych",
+    "Monitoring"
+  ],
+  correctAnswersText: [
+    "Encryption-at-rest"
+  ]
+},
+{
+  id: "AZ900_P42",
+  questionText: "Co wybierzesz, aby szybko tworzyć infrastrukturę Azure za pomocą deklaratywnego pliku JSON lub YAML?",
+  optionsForReference: [
+    "Azure Portal",
+    "Azure Resource Manager (ARM) Templates",
+    "Azure CLI",
+    "Azure Monitor"
+  ],
+  correctAnswersText: [
+    "Azure Resource Manager (ARM) Templates"
+  ]
+},
+{
+  id: "AZ900_P43",
+  questionText: "Jaka usługa Azure jest najlepsza do przechowywania dużych ilości danych analitycznych podlegających przetwarzaniu Big Data?",
+  optionsForReference: [
+    "Azure SQL Database",
+    "Azure Cosmos DB",
+    "Azure Data Lake Storage",
+    "Azure Blob Storage"
+  ],
+  correctAnswersText: [
+    "Azure Data Lake Storage"
+  ]
+},
+{
+  id: "AZ900_P44",
+  questionText: "Co zastosujesz, aby zmniejszyć ryzyko awarii pojedynczego centrum danych w Azure?",
+  optionsForReference: [
+    "Azure Virtual Machines",
+    "Azure Availability Zones",
+    "Azure DevOps",
+    "Azure Active Directory"
+  ],
+  correctAnswersText: [
+    "Azure Availability Zones"
+  ]
+},
 
   // === AZ-900 Pytania Wielokrotnego Wyboru ===
   // (Usunięto pytania AZ900_WM1-WM6 które były w formacie Tak/Nie lub nie były na nowej liście)
@@ -776,5 +1392,132 @@ const questionDatabase = [
         "Azure Content Delivery Network"
     ],
     correctAnswersText: ["Azure Load Balancer", "Azure Application Gateway"]
-  }
+  },
+  {
+  id: "AZ900_WM19",
+  questionText: "Które z poniższych są podstawowymi kategoriami usług chmurowych?",
+  optionsForReference: [
+    "IaaS (Infrastructure as a Service)",
+    "PaaS (Platform as a Service)",
+    "CaaS (Communication as a Service)",
+    "SaaS (Software as a Service)",
+    "RaaS (Resource as a Service)"
+  ],
+  correctAnswersText: [
+    "IaaS (Infrastructure as a Service)",
+    "PaaS (Platform as a Service)",
+    "SaaS (Software as a Service)"
+  ]
+},
+{
+  id: "AZ900_WM20",
+  questionText: "Które z poniższych są korzyściami korzystania z chmury obliczeniowej?",
+  optionsForReference: [
+    "Skalowalność",
+    "Wysokie koszty początkowe",
+    "Elastyczność",
+    "Brak konieczności zarządzania infrastrukturą fizyczną",
+    "Całkowity brak kosztów eksploatacyjnych"
+  ],
+  correctAnswersText: [
+    "Skalowalność",
+    "Elastyczność",
+    "Brak konieczności zarządzania infrastrukturą fizyczną"
+  ]
+},
+{
+  id: "AZ900_WM21",
+  questionText: "Które z usług należą do kategorii IaaS?",
+  optionsForReference: [
+    "Azure Virtual Machines",
+    "Azure SQL Database",
+    "Azure Kubernetes Service",
+    "Azure Functions",
+    "Azure Blob Storage"
+  ],
+  correctAnswersText: [
+    "Azure Virtual Machines",
+    "Azure Kubernetes Service",
+    "Azure Blob Storage"
+  ]
+},
+{
+  id: "AZ900_WM22",
+  questionText: "Które z poniższych elementów stanowią odpowiedzialność dostawcy w modelu SaaS?",
+  optionsForReference: [
+    "Aplikacja",
+    "Dane użytkownika",
+    "System operacyjny",
+    "Środowisko uruchomieniowe",
+    "Urządzenia końcowe klienta"
+  ],
+  correctAnswersText: [
+    "Aplikacja",
+    "System operacyjny",
+    "Środowisko uruchomieniowe"
+  ]
+},
+{
+  id: "AZ900_WM23",
+  questionText: "Jakie z wymienionych poniżej typowe modele wdrożeniowe chmury można wskazać?",
+  optionsForReference: [
+    "Chmura publiczna",
+    "Chmura lokalna",
+    "Chmura prywatna",
+    "Chmura hybrydowa",
+    "Chmura sieciowa"
+  ],
+  correctAnswersText: [
+    "Chmura publiczna",
+    "Chmura prywatna",
+    "Chmura hybrydowa"
+  ]
+},
+{
+  id: "AZ900_WM24",
+  questionText: "Co cechuje chmurę hybrydową?",
+  optionsForReference: [
+    "Łączy infrastrukturę lokalną z chmurą publiczną",
+    "Jest mniej elastyczna niż chmura prywatna",
+    "Wspiera migrację danych między lokalnym środowiskiem a chmurą",
+    "Oferuje tylko rozwiązania PaaS",
+    "Zapewnia redundancję geograficzną"
+  ],
+  correctAnswersText: [
+    "Łączy infrastrukturę lokalną z chmurą publiczną",
+    "Wspiera migrację danych między lokalnym środowiskiem a chmurą",
+    "Zapewnia redundancję geograficzną"
+  ]
+},
+{
+  id: "AZ900_WM25",
+  questionText: "Co umożliwia Azure Resource Manager (ARM)?",
+  optionsForReference: [
+    "Tworzenie i zarządzanie zasobami jako grupa",
+    "Instalowanie aplikacji mobilnych",
+    "Udostępnianie serwisów lokalnych",
+    "Stosowanie szablonów infrastruktury jako kodu",
+    "Zarządzanie licencjami Office 365"
+  ],
+  correctAnswersText: [
+    "Tworzenie i zarządzanie zasobami jako grupa",
+    "Stosowanie szablonów infrastruktury jako kodu"
+  ]
+},
+{
+  id: "AZ900_WM26",
+  questionText: "Które funkcje oferuje Azure Advisor?",
+  optionsForReference: [
+    "Rekomendacje dotyczące optymalizacji kosztów",
+    "Zwiększanie opóźnień sieciowych",
+    "Usprawnianie bezpieczeństwa zasobów",
+    "Tworzenie aplikacji mobilnych",
+    "Poprawa wydajności zasobów"
+  ],
+  correctAnswersText: [
+    "Rekomendacje dotyczące optymalizacji kosztów",
+    "Usprawnianie bezpieczeństwa zasobów",
+    "Poprawa wydajności zasobów"
+  ]
+}
 ];
