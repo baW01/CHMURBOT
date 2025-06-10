@@ -1,9 +1,8 @@
 // content.js
 
-// (Funkcje normalizeText, levenshteinDistance, calculateSimilarity pozostają bez zmian z poprzedniej wersji)
 const processedQuestions = new WeakSet();
 
-
+// --- Funkcje pomocnicze (bez zmian) ---
 function sleep(ms) {
   return new Promise(res => setTimeout(res, ms));
 }
@@ -18,7 +17,6 @@ async function throttledCallChatGPT(questionText, optionsArray, questionType, ap
   lastApiCall = Date.now();
   return callChatGPT(questionText, optionsArray, questionType, apiKey);
 }
-
 
 function normalizeText(text) {
   if (!text) return '';
@@ -60,7 +58,6 @@ function calculateSimilarity(s1, s2) {
   return (longer.length - levenshteinDistance(longer, shorter)) / parseFloat(longer.length);
 }
 
-
 async function getApiKey() {
   return new Promise((resolve) => {
     chrome.storage.local.get(['openaiApiKey'], (result) => {
@@ -69,6 +66,7 @@ async function getApiKey() {
   });
 }
 
+// --- Funkcja callChatGPT (bez zmian) ---
 async function callChatGPT(questionText, optionsArray, questionType, apiKey) {
   console.log("Form Helper: Calling ChatGPT API for question:", questionText.substring(0, 50) + "...");
   const modelToUse = "gpt-4.1"; // Możesz zmienić na nowszy model np. gpt-4o, gpt-4-turbo
@@ -78,7 +76,6 @@ async function callChatGPT(questionText, optionsArray, questionType, apiKey) {
     optionsString += `${opt.letter}: ${opt.text}\n`;
   });
 
-  // --- Ulepszony Prompt ---
   const system_prompt_content = `Jesteś wysoce precyzyjnym asystentem AI specjalizującym się w odpowiadaniu na pytania testowe z wielokrotnym lub jednokrotnym wyborem.
 Twoim zadaniem jest zidentyfikowanie poprawnej litery (lub liter) odpowiedzi z podanej listy opcji.
 Zawsze odpowiadaj TYLKO używając liter opcji (np. A, B, C, D).
@@ -98,7 +95,7 @@ Zidentyfikuj JEDNĄ poprawną opcję i zwróć TYLKO literę tej opcji. Na przyk
     user_prompt_instruction = `To jest pytanie WIELOKROTNEGO WYBORU. Przeanalizuj poniższe pytanie i podane opcje.
 Może być więcej niż jedna poprawna odpowiedź. Zidentyfikuj WSZYSTKIE poprawne opcje.
 Zwróć TYLKO litery tych opcji, oddzielone przecinkami, BEZ SPACJI PO PRZECINKU. Na przykład, jeśli opcje A i C są poprawne, Twoja odpowiedź musi brzmieć DOKŁADNIE: A,C`;
-  } else { // Fallback, chociaż typ pytania powinien być już znany
+  } else {
     user_prompt_instruction = `Przeanalizuj poniższe pytanie i podane opcje.
 Zwróć TYLKO literę lub litery poprawnych odpowiedzi. Jeśli jest jedna poprawna odpowiedź, zwróć tylko jej literę (np. B). Jeśli jest więcej niż jedna, zwróć litery oddzielone przecinkami, bez spacji po przecinku (np. A,C).`;
   }
@@ -114,7 +111,6 @@ ${optionsString}
 ---
 
 Twoja odpowiedź (TYLKO litera/litery, np. B lub A,C):`;
-  // --- Koniec ulepszonego Promptu ---
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -129,9 +125,9 @@ Twoja odpowiedź (TYLKO litera/litery, np. B lub A,C):`;
           { role: "system", content: system_prompt_content },
           { role: "user", content: user_prompt_content }
         ],
-        temperature: 0.1, // Bardzo niska temperatura dla bardziej przewidywalnych i precyzyjnych odpowiedzi
-        top_p: 0.1, // Również dla większej precyzji
-        max_tokens: 15 // Oczekujemy tylko kilku liter i przecinków
+        temperature: 0.1,
+        top_p: 0.1,
+        max_tokens: 15
       })
     });
 
@@ -146,25 +142,17 @@ Twoja odpowiedź (TYLKO litera/litery, np. B lub A,C):`;
 
     const data = await response.json();
     if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
-      // Bardziej rygorystyczne czyszczenie odpowiedzi - usuwamy wszystko oprócz liter A-Z i przecinków
       const rawAnswer = data.choices[0].message.content.trim().toUpperCase();
-      const answerLetters = rawAnswer.replace(/[^A-Z,]/g, ''); 
+      const answerLetters = rawAnswer.replace(/[^A-Z,]/g, '');
       
       console.log("Form Helper: ChatGPT raw response:", rawAnswer);
       console.log("Form Helper: ChatGPT cleaned response (letters):", answerLetters);
       
-      // Dalsza walidacja, aby upewnić się, że format to np. A lub A,B,C
       if (/^[A-Z](,[A-Z])*$/.test(answerLetters) || /^[A-Z]$/.test(answerLetters)) {
          return answerLetters.split(',').map(l => l.trim()).filter(l => l.length === 1 && l >= 'A' && l <= 'Z');
       } else {
         console.warn("Form Helper: ChatGPT response format after cleaning is still unexpected:", answerLetters);
-        // Można spróbować dodatkowego parsowania lub zignorować, jeśli format jest zły
-        // Na przykład, jeśli jest "ODPOWIEDŹ: A", to po replace(/[^A-Z,]/g, '') zostanie "ODPOWIEDAZ" co jest niepoprawne
-        // W tym przypadku, jeśli pierwsze czyszczenie nie dało dobrego wyniku, można spróbować bardziej agresywnych metod
-        // lub po prostu odrzucić odpowiedź.
-        // Dla uproszczenia, jeśli format jest zły po pierwszym czyszczeniu, zwracamy null.
-        // Można by tu dodać logikę próbującą wyciągnąć pojedyncze litery z dłuższego tekstu, ale to zwiększa ryzyko błędu.
-        const singleLetterMatch = rawAnswer.match(/[A-Z](?![A-Z])(?![a-z])/g); // Próba znalezienia pojedynczych wielkich liter
+        const singleLetterMatch = rawAnswer.match(/[A-Z](?![A-Z])(?![a-z])/g);
         if(singleLetterMatch){
             console.log("Form Helper: Attempting to extract single letters from noisy response:", singleLetterMatch.join(','));
             return singleLetterMatch.filter(l => l.length === 1 && l >= 'A' && l <= 'Z');
@@ -181,19 +169,33 @@ Twoja odpowiedź (TYLKO litera/litery, np. B lub A,C):`;
   return null;
 }
 
-async function markCorrectAnswers() {
+// --- Główna funkcja (zmodyfikowana) ---
+async function markCorrectAnswers(contextDocument) {
+  // Sprawdzenie, czy w danym dokumencie (strona lub iframe) jest formularz Forms
+  const isFormsPage = contextDocument.querySelector('div[data-automation-id="questionItem"]');
+  if (!isFormsPage) {
+    // Jeśli nie ma pytań, nie rób nic w tym kontekście.
+    return;
+  }
+  
+  if (window.self === window.top) {
+      console.log("Form Helper: Running on the main page.");
+  } else {
+      console.log("Form Helper: Running inside an iframe.");
+  }
+
   console.log("Form Helper: Starting to process questions...");
-  const questionItems = document.querySelectorAll('div[data-automation-id="questionItem"]');
+  const questionItems = contextDocument.querySelectorAll('div[data-automation-id="questionItem"]');
   if (questionItems.length === 0) {
-    console.log("Form Helper: No question items found.");
+    console.log("Form Helper: No question items found in this context.");
     return;
   }
 
   const apiKey = await getApiKey();
 
   for (const questionElement of questionItems) {
-    const qid = questionElement.getAttribute('id') || questionElement.dataset.automationId;
     if (processedQuestions.has(questionElement)) continue;
+    
     const questionTitleElement = questionElement.querySelector('[data-automation-id="questionTitle"] [role="heading"], [data-automation-id="questionTitle"]');
     let pageQuestionText = '';
     if (questionTitleElement) {
@@ -222,17 +224,19 @@ async function markCorrectAnswers() {
     let bestMatch = null;
     let highestSimilarity = 0;
 
-    questionDatabase.forEach(dbEntry => {
-      const normalizedDbQuestion = normalizeText(dbEntry.questionText);
-      const similarity = calculateSimilarity(normalizedPageQuestion, normalizedDbQuestion);
-      if (similarity > highestSimilarity) {
-        highestSimilarity = similarity;
-        bestMatch = dbEntry;
-      }
-    });
+    // Przeszukiwanie lokalnej bazy danych
+    if (typeof questionDatabase !== 'undefined') {
+        questionDatabase.forEach(dbEntry => {
+          const normalizedDbQuestion = normalizeText(dbEntry.questionText);
+          const similarity = calculateSimilarity(normalizedPageQuestion, normalizedDbQuestion);
+          if (similarity > highestSimilarity) {
+            highestSimilarity = similarity;
+            bestMatch = dbEntry;
+          }
+        });
+    }
 
-    // --- Blok obsługi odpowiedzi ---
-    let correctAnswersToMark = []; // Będzie zawierać TEKSTY poprawnych odpowiedzi
+    let correctAnswersToMark = [];
 
     if (bestMatch && highestSimilarity >= 0.90) {
       console.log(`Form Helper: Found LOCAL match for "${normalizedPageQuestion}" (Similarity: ${highestSimilarity.toFixed(2)})`);
@@ -245,7 +249,7 @@ async function markCorrectAnswers() {
       let questionType = 'unknown'; 
 
       choiceItems.forEach((choiceElement, choiceIndex) => {
-        const optionLabelElement = choiceElement.querySelector('span.text-format-content'); // Dostosuj selektor jeśli trzeba
+        const optionLabelElement = choiceElement.querySelector('span.text-format-content');
         const inputElement = choiceElement.querySelector('input[type="radio"], input[type="checkbox"]');
 
         if (inputElement && optionLabelElement && optionLabelElement.textContent) {
@@ -255,7 +259,7 @@ async function markCorrectAnswers() {
           optionsForApi.push({
             letter: String.fromCharCode(65 + choiceIndex),
             text: optionLabelElement.textContent.trim(),
-            normalizedText: normalizeText(optionLabelElement.textContent.trim()), // Do późniejszego dopasowania
+            normalizedText: normalizeText(optionLabelElement.textContent.trim()),
             element: optionLabelElement 
           });
         }
@@ -268,7 +272,7 @@ async function markCorrectAnswers() {
           gptAnswerLetters.forEach(letter => {
             const foundOption = optionsForApi.find(opt => opt.letter === letter);
             if (foundOption) {
-              correctAnswersToMark.push(foundOption.normalizedText); // Dodajemy znormalizowany tekst odpowiedzi
+              correctAnswersToMark.push(foundOption.normalizedText);
             }
           });
         } else {
@@ -285,7 +289,7 @@ async function markCorrectAnswers() {
     if (correctAnswersToMark.length > 0) {
         const choiceItemsOnPage = questionElement.querySelectorAll('div[data-automation-id="choiceItem"]');
         choiceItemsOnPage.forEach(choiceElement => {
-            const optionLabelElement = choiceElement.querySelector('span.text-format-content'); // Upewnij się, że selektor jest poprawny
+            const optionLabelElement = choiceElement.querySelector('span.text-format-content');
             if (optionLabelElement) {
                 const pageOptionText = optionLabelElement.textContent;
                 const normalizedPageOption = normalizeText(pageOptionText);
@@ -301,32 +305,38 @@ async function markCorrectAnswers() {
     }
     processedQuestions.add(questionElement);
     await sleep(2000);
-  } // koniec pętli po pytaniach
+  }
 }
 
 
-// --- Uruchomienie ---
-// (Pozostaje bez zmian - setTimeout i MutationObserver)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(markCorrectAnswers, 2000); 
-    });
-} else {
-    setTimeout(markCorrectAnswers, 2000); 
-}
-let isProcessing = false;
-const observer = new MutationObserver((mutationsList, observerInstance) => {
-    for(const mutation of mutationsList) {
-        if (mutation.type === 'childList') {
-            const questionItemsAdded = Array.from(mutation.addedNodes).some(node =>
-                node.nodeType === Node.ELEMENT_NODE && node.matches('div[data-automation-id="questionItem"]')
-            );
-            if (questionItemsAdded) {
-                 console.log("Form Helper: Detected question items or changes, re-processing.");
-                 setTimeout(markCorrectAnswers, 500); 
-                 return; 
+// --- Uruchomienie (zmodyfikowane) ---
+function initialize() {
+    // Uruchomienie skryptu w bieżącym kontekście (strona główna lub iframe)
+    markCorrectAnswers(document);
+
+    // Obserwator zmian, aby wykrywać dynamicznie ładowane pytania
+    const observer = new MutationObserver((mutationsList, observerInstance) => {
+        for(const mutation of mutationsList) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                const questionItemsAdded = Array.from(mutation.addedNodes).some(node =>
+                    node.nodeType === Node.ELEMENT_NODE && (node.matches('div[data-automation-id="questionItem"]') || node.querySelector('div[data-automation-id="questionItem"]'))
+                );
+                if (questionItemsAdded) {
+                     console.log("Form Helper: Detected question items or changes, re-processing.");
+                     // Dajemy krótki czas na pełne załadowanie elementów
+                     setTimeout(() => markCorrectAnswers(document), 1000); 
+                     return; 
+                }
             }
         }
-    }
-});
-observer.observe(document.body, { childList: true, subtree: true });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+}
+
+// Czekamy na załadowanie dokumentu przed uruchomieniem
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+} else {
+    initialize();
+}
