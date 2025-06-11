@@ -171,10 +171,10 @@ Twoja odpowiedź (TYLKO litera/litery, np. B lub A,C):`;
 
 // --- Główna funkcja (zmodyfikowana) ---
 async function markCorrectAnswers(contextDocument) {
-  // Sprawdzenie, czy w danym dokumencie (strona lub iframe) jest formularz Forms
-  const isFormsPage = contextDocument.querySelector('div[data-automation-id="questionItem"]');
-  if (!isFormsPage) {
-    // Jeśli nie ma pytań, nie rób nic w tym kontekście.
+  const isMicrosoftForms = contextDocument.querySelector('div[data-automation-id="questionItem"]');
+  const isGoogleForms = contextDocument.querySelector('div[jsmodel="CP1oW"]');
+
+  if (!isMicrosoftForms && !isGoogleForms) {
     return;
   }
   
@@ -184,147 +184,189 @@ async function markCorrectAnswers(contextDocument) {
       console.log("Form Helper: Running inside an iframe.");
   }
 
-  console.log("Form Helper: Starting to process questions...");
-  const questionItems = contextDocument.querySelectorAll('div[data-automation-id="questionItem"]');
-  if (questionItems.length === 0) {
-    console.log("Form Helper: No question items found in this context.");
-    return;
-  }
-
   const apiKey = await getApiKey();
 
-  for (const questionElement of questionItems) {
-    if (processedQuestions.has(questionElement)) continue;
-    
-    const questionTitleElement = questionElement.querySelector('[data-automation-id="questionTitle"] [role="heading"], [data-automation-id="questionTitle"]');
-    let pageQuestionText = '';
-    if (questionTitleElement) {
-        const potentialQuestionSpans = questionTitleElement.querySelectorAll(':scope > span.text-format-content');
-        potentialQuestionSpans.forEach(span => {
-            if (span.getAttribute('data-automation-id') !== 'questionOrdinal') {
-                if (!span.closest('div[class*="-a-"]')) { 
-                    pageQuestionText += span.textContent + ' ';
-                }
-            }
-        });
-        pageQuestionText = pageQuestionText.trim();
-        if (!pageQuestionText) {
+  if (isMicrosoftForms) {
+    console.log("Form Helper: Detected Microsoft Forms. Processing...");
+    await processMicrosoftForms(contextDocument, apiKey);
+  }
+
+  if (isGoogleForms) {
+    console.log("Form Helper: Detected Google Forms. Processing...");
+    await processGoogleForms(contextDocument, apiKey);
+  }
+}
+
+async function processMicrosoftForms(doc, apiKey) {
+    const questionItems = doc.querySelectorAll('div[data-automation-id="questionItem"]');
+    for (const questionElement of questionItems) {
+        if (processedQuestions.has(questionElement)) continue;
+
+        const questionTitleElement = questionElement.querySelector('[data-automation-id="questionTitle"] [role="heading"], [data-automation-id="questionTitle"]');
+        let pageQuestionText = '';
+        if (questionTitleElement) {
              let rawText = questionTitleElement.textContent || "";
              const ordinalElement = questionTitleElement.querySelector('span[data-automation-id="questionOrdinal"]');
              if (ordinalElement) rawText = rawText.replace(ordinalElement.textContent, '');
              const pointsElement = questionTitleElement.querySelector('span[data-automation-id="questionTitlePoint"]');
              if (pointsElement) rawText = rawText.replace(pointsElement.textContent, '');
-             pageQuestionText = rawText;
+             pageQuestionText = rawText.trim();
+        } else { continue; }
+
+        const normalizedPageQuestion = normalizeText(pageQuestionText);
+        if (!normalizedPageQuestion) { continue; }
+
+        let correctAnswersToMark = await findAnswers(normalizedPageQuestion, apiKey, questionElement, 'ms');
+        
+        if (correctAnswersToMark.length > 0) {
+            const choiceItemsOnPage = questionElement.querySelectorAll('div[data-automation-id="choiceItem"]');
+            choiceItemsOnPage.forEach(choiceElement => {
+                const optionLabelElement = choiceElement.querySelector('span.text-format-content');
+                if (optionLabelElement) {
+                    const pageOptionText = optionLabelElement.textContent;
+                    const normalizedPageOption = normalizeText(pageOptionText);
+
+                    if (correctAnswersToMark.includes(normalizedPageOption)) {
+                        if (!pageOptionText.trim().endsWith(' .')) {
+                            optionLabelElement.textContent += ' .';
+                            console.log(`Form Helper: Marked answer for MS Forms: "${pageOptionText}"`);
+                        }
+                    }
+                }
+            });
         }
-    } else { continue; }
+        processedQuestions.add(questionElement);
+        await sleep(2000);
+    }
+}
 
-    const normalizedPageQuestion = normalizeText(pageQuestionText);
-    if (!normalizedPageQuestion) { continue; }
+async function processGoogleForms(doc, apiKey) {
+    const questionItems = doc.querySelectorAll('div[jsmodel="CP1oW"]'); // Main container for a question
+    for (const questionElement of questionItems) {
+        if (processedQuestions.has(questionElement)) continue;
+        
+        const questionTitleElement = questionElement.querySelector('div[role="heading"] .M7eMe');
+        if (!questionTitleElement) continue;
 
+        const pageQuestionText = questionTitleElement.textContent.trim();
+        const normalizedPageQuestion = normalizeText(pageQuestionText);
+        if (!normalizedPageQuestion) { continue; }
+
+        let correctAnswersToMark = await findAnswers(normalizedPageQuestion, apiKey, questionElement, 'google');
+
+        if (correctAnswersToMark.length > 0) {
+            const choiceItems = questionElement.querySelectorAll('.docssharedWizToggleLabeledContainer');
+            choiceItems.forEach(choiceElement => {
+                const optionLabelElement = choiceElement.querySelector('.aDTYNe');
+                if (optionLabelElement) {
+                    const pageOptionText = optionLabelElement.textContent;
+                    const normalizedPageOption = normalizeText(pageOptionText);
+
+                    if (correctAnswersToMark.includes(normalizedPageOption)) {
+                        if (!pageOptionText.trim().endsWith(' .')) {
+                             optionLabelElement.textContent += ' .';
+                             console.log(`Form Helper: Marked answer for Google Forms: "${pageOptionText}"`);
+                        }
+                    }
+                }
+            });
+        }
+        processedQuestions.add(questionElement);
+        await sleep(2000);
+    }
+}
+
+async function findAnswers(normalizedQuestion, apiKey, questionElement, platform) {
     let bestMatch = null;
     let highestSimilarity = 0;
 
-    // Przeszukiwanie lokalnej bazy danych
     if (typeof questionDatabase !== 'undefined') {
         questionDatabase.forEach(dbEntry => {
-          const normalizedDbQuestion = normalizeText(dbEntry.questionText);
-          const similarity = calculateSimilarity(normalizedPageQuestion, normalizedDbQuestion);
-          if (similarity > highestSimilarity) {
-            highestSimilarity = similarity;
-            bestMatch = dbEntry;
-          }
+            const normalizedDbQuestion = normalizeText(dbEntry.questionText);
+            const similarity = calculateSimilarity(normalizedQuestion, normalizedDbQuestion);
+            if (similarity > highestSimilarity) {
+                highestSimilarity = similarity;
+                bestMatch = dbEntry;
+            }
         });
     }
-
-    let correctAnswersToMark = [];
 
     if (bestMatch && highestSimilarity >= 0.90) {
-      console.log(`Form Helper: Found LOCAL match for "${normalizedPageQuestion}" (Similarity: ${highestSimilarity.toFixed(2)})`);
-      correctAnswersToMark = bestMatch.correctAnswersText.map(ans => normalizeText(ans));
+        console.log(`Form Helper: Found LOCAL match for "${normalizedQuestion}" (Similarity: ${highestSimilarity.toFixed(2)})`);
+        return bestMatch.correctAnswersText.map(ans => normalizeText(ans));
     } else if (apiKey) {
-      console.log(`Form Helper: No local match for "${normalizedPageQuestion}". Trying ChatGPT.`);
-      
-      const choiceItems = questionElement.querySelectorAll('div[data-automation-id="choiceItem"]');
-      const optionsForApi = [];
-      let questionType = 'unknown'; 
+        console.log(`Form Helper: No local match for "${normalizedQuestion}". Trying ChatGPT.`);
+        let optionsForApi = [];
+        let questionType = 'unknown';
 
-      choiceItems.forEach((choiceElement, choiceIndex) => {
-        const optionLabelElement = choiceElement.querySelector('span.text-format-content');
-        const inputElement = choiceElement.querySelector('input[type="radio"], input[type="checkbox"]');
-
-        if (inputElement && optionLabelElement && optionLabelElement.textContent) {
-          if (questionType === 'unknown' && inputElement.type) {
-            questionType = inputElement.type === 'radio' ? 'single' : 'multiple';
-          }
-          optionsForApi.push({
-            letter: String.fromCharCode(65 + choiceIndex),
-            text: optionLabelElement.textContent.trim(),
-            normalizedText: normalizeText(optionLabelElement.textContent.trim()),
-            element: optionLabelElement 
-          });
-        }
-      });
-
-      if (optionsForApi.length > 0 && questionType !== 'unknown') {
-        const gptAnswerLetters = await throttledCallChatGPT(pageQuestionText, optionsForApi, questionType, apiKey);
-        if (gptAnswerLetters && gptAnswerLetters.length > 0) {
-          console.log(`Form Helper: ChatGPT suggested letters: ${gptAnswerLetters.join(', ')}`);
-          gptAnswerLetters.forEach(letter => {
-            const foundOption = optionsForApi.find(opt => opt.letter === letter);
-            if (foundOption) {
-              correctAnswersToMark.push(foundOption.normalizedText);
-            }
-          });
-        } else {
-            console.log("Form Helper: ChatGPT did not provide a valid answer or no answer.");
-        }
-      } else {
-          console.log("Form Helper: Could not determine options or question type for ChatGPT.");
-      }
-    } else {
-      console.log(`Form Helper: No local match and no API key configured for "${normalizedPageQuestion}".`);
-    }
-
-    // --- Oznaczanie odpowiedzi ---
-    if (correctAnswersToMark.length > 0) {
-        const choiceItemsOnPage = questionElement.querySelectorAll('div[data-automation-id="choiceItem"]');
-        choiceItemsOnPage.forEach(choiceElement => {
-            const optionLabelElement = choiceElement.querySelector('span.text-format-content');
-            if (optionLabelElement) {
-                const pageOptionText = optionLabelElement.textContent;
-                const normalizedPageOption = normalizeText(pageOptionText);
-
-                if (correctAnswersToMark.includes(normalizedPageOption)) {
-                    if (!pageOptionText.trim().endsWith(' .')) {
-                        optionLabelElement.textContent += ' .';
-                        console.log(`Form Helper: Marked answer: "${pageOptionText}"`);
+        if (platform === 'ms') {
+            const choiceItems = questionElement.querySelectorAll('div[data-automation-id="choiceItem"]');
+            choiceItems.forEach((choiceElement, choiceIndex) => {
+                const optionLabelElement = choiceElement.querySelector('span.text-format-content');
+                const inputElement = choiceElement.querySelector('input[type="radio"], input[type="checkbox"]');
+                if (inputElement && optionLabelElement && optionLabelElement.textContent) {
+                    if (questionType === 'unknown' && inputElement.type) {
+                        questionType = inputElement.type === 'radio' ? 'single' : 'multiple';
                     }
+                    optionsForApi.push({ letter: String.fromCharCode(65 + choiceIndex), text: optionLabelElement.textContent.trim(), normalizedText: normalizeText(optionLabelElement.textContent.trim()) });
                 }
+            });
+        } else if (platform === 'google') {
+            const choiceItems = questionElement.querySelectorAll('.docssharedWizToggleLabeledContainer');
+            const isRadio = questionElement.querySelector('div[role="radiogroup"]');
+            const isCheckbox = questionElement.querySelector('div[role="group"]'); // Checkboxes are in a 'group'
+            questionType = isRadio ? 'single' : (isCheckbox ? 'multiple' : 'unknown');
+            
+            choiceItems.forEach((choiceElement, choiceIndex) => {
+                const optionLabelElement = choiceElement.querySelector('.aDTYNe');
+                if (optionLabelElement && optionLabelElement.textContent) {
+                    optionsForApi.push({ letter: String.fromCharCode(65 + choiceIndex), text: optionLabelElement.textContent.trim(), normalizedText: normalizeText(optionLabelElement.textContent.trim()) });
+                }
+            });
+        }
+
+        if (optionsForApi.length > 0 && questionType !== 'unknown') {
+            const gptAnswerLetters = await throttledCallChatGPT(normalizedQuestion, optionsForApi, questionType, apiKey);
+            if (gptAnswerLetters && gptAnswerLetters.length > 0) {
+                console.log(`Form Helper: ChatGPT suggested letters: ${gptAnswerLetters.join(', ')}`);
+                const answers = [];
+                gptAnswerLetters.forEach(letter => {
+                    const foundOption = optionsForApi.find(opt => opt.letter === letter);
+                    if (foundOption) {
+                        answers.push(foundOption.normalizedText);
+                    }
+                });
+                return answers;
+            } else {
+                console.log("Form Helper: ChatGPT did not provide a valid answer.");
             }
-        });
+        } else {
+            console.log("Form Helper: Could not determine options or question type for ChatGPT.");
+        }
+    } else {
+        console.log(`Form Helper: No local match and no API key for "${normalizedQuestion}".`);
     }
-    processedQuestions.add(questionElement);
-    await sleep(2000);
-  }
+    return [];
 }
 
 
 // --- Uruchomienie (zmodyfikowane) ---
 function initialize() {
-    // Uruchomienie skryptu w bieżącym kontekście (strona główna lub iframe)
     markCorrectAnswers(document);
 
-    // Obserwator zmian, aby wykrywać dynamicznie ładowane pytania
     const observer = new MutationObserver((mutationsList, observerInstance) => {
         for(const mutation of mutationsList) {
             if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                const questionItemsAdded = Array.from(mutation.addedNodes).some(node =>
+                const msFormsAdded = Array.from(mutation.addedNodes).some(node =>
                     node.nodeType === Node.ELEMENT_NODE && (node.matches('div[data-automation-id="questionItem"]') || node.querySelector('div[data-automation-id="questionItem"]'))
                 );
-                if (questionItemsAdded) {
-                     console.log("Form Helper: Detected question items or changes, re-processing.");
-                     // Dajemy krótki czas na pełne załadowanie elementów
-                     setTimeout(() => markCorrectAnswers(document), 1000); 
+                 const googleFormsAdded = Array.from(mutation.addedNodes).some(node =>
+                    node.nodeType === Node.ELEMENT_NODE && (node.matches('div[jsmodel="CP1oW"]') || node.querySelector('div[jsmodel="CP1oW"]'))
+                );
+
+                if (msFormsAdded || googleFormsAdded) {
+                     console.log("Form Helper: Detected dynamic content, re-processing.");
+                     setTimeout(() => markCorrectAnswers(document), 1500); 
                      return; 
                 }
             }
@@ -334,7 +376,6 @@ function initialize() {
     observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// Czekamy na załadowanie dokumentu przed uruchomieniem
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initialize);
 } else {
